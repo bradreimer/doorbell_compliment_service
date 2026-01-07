@@ -1,0 +1,33 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.env/
+
+# Logs
+logs/
+*.log
+
+# Editor settings
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Jetson container artifacts
+# If you build a jetson-container inside this repo, ignore its build output
+jetson-containers/
+container/
+build/
+dist/
+*.img
+*.sif
+
+# Python packaging
+*.egg-info/
