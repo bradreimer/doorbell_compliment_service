@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (better layer caching)
+    # Copy requirements first (better layer caching)
 COPY requirements.txt .
 
 # Install Python dependencies

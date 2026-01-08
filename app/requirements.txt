@@ -1,3 +1,6 @@
+--extra-index-url https://pypi.org/simple
+
+# Web framework
 fastapi
 uvicorn[standard]
 pillow
@@ -9,4 +12,3 @@ sentence-transformers
 
 # Optional but recommended for robustness
 numpy
-

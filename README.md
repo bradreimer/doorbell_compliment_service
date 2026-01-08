@@ -1,107 +1,125 @@
 # Doorbell Compliment Service
 
-A FastAPI microservice running on my Jetson Orin Nano.  
-Home Assistant sends a snapshot from my Ring doorbell, and this service analyzes the visitor’s appearance and returns a personalized compliment.
+A Jetson-powered web service that analyzes doorbell images, analyzes the visitor's appearance, then returns a personalized compliment.
 
-This project is designed to be lightweight, easy to deploy, and fun to extend. It integrates cleanly with Home Assistant automations and runs efficiently on NVIDIA Jetson hardware.
-
----
-
-## 🚪 How It Works
-
-1. Home Assistant detects a Ring doorbell press.
-2. Home Assistant captures a snapshot and sends it to this service.
-3. The Jetson analyzes the image using a lightweight vision model.
-4. The service generates a contextual compliment based on visual cues.
-5. Home Assistant receives the compliment and can:
-   - Send it as a phone notification  
-   - Speak it via TTS  
-   - Store it in a dashboard  
-   - Log it for history  
+This project runs on **NVIDIA Jetson Orin Nano** using [jetson-containers](https://github.com/dusty-nv/jetson-containers) and `l4t-pytorch`, providing a lightweight FastAPI endpoint to handle incoming images and generate compliments (or descriptions) of visitors.
 
 ---
 
-## 🧠 Features
+## Features
 
-- FastAPI endpoint: `POST /compliment`
-- Lightweight image processing (EfficientNet-based)
-- Simple, modular compliment generation
-- Easy integration with Home Assistant
-- Runs inside the Jetson L4T PyTorch container
-- Fully open-source under the Apache 2.0 license
+* FastAPI web server at `/doorbell` (default `GET` endpoint for testing)
+* GPU-accelerated image analysis with PyTorch / TorchVision
+* Compatible with JetPack 6 / L4T 36.x
+* Fully editable via VS Code Remote SSH
+* Easy containerized workflow with jetson-containers
+* Clean GitHub repository layout
 
 ---
 
-## 📦 Project Structure
+## Repository Layout
 
-```plain
+```
 doorbell_compliment_service/
-    api/
-        main.py          # FastAPI entrypoint
-        vision.py        # Image feature extraction
-        compliment.py    # Compliment generation logic
-    requirements.txt
-    README.md
-    .gitignore
+├── app/
+│   ├── main.py            # FastAPI server entry point
+│   ├── model.py           # Image analysis model
+│   ├── image_utils.py     # Optional image helpers
+│   └── requirements.txt   # Python dependencies
+├── jetson/
+│   └── dockerfile.doorbell # Jetson container Dockerfile (optional)
+├── scripts/
+│   └── dev.sh             # Convenience launcher
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-## ▶️ Running the Service
+## Prerequisites
 
-Inside your Jetson’s L4T PyTorch container:
+* NVIDIA Jetson Orin Nano Developer Kit
+* JetPack 6 / L4T 36.x installed
+* `jetson-containers` installed on the host
+* Python 3.10+ (via container)
+
+---
+
+## Running the Project
+
+### Using jetson-containers (recommended)
+
+From the host:
 
 ```bash
-pip install -r requirements.txt
-uvicorn api.main:app --host 0.0.0.0 --port 8000
+cd ~/source/jetson-containers
+jetson-containers run \
+  -v ~/projects/doorbell_compliment_service:/workspace/doorbell_compliment_service \
+  $(autotag l4t-pytorch)
 ```
 
-The service will be available at:
-
-```plain
-http://helmholtz.local:8000/compliment
-```
-
----
-
-## 🛠 Home Assistant Integration
-
-Home Assistant should:
-
-- Capture a Ring snapshot  
-- POST it to this service  
-- Use the returned compliment however you like  
-
-See your Home Assistant automation for details.
-
----
-
-## 🧪 Testing Manually
+Inside the container:
 
 ```bash
-curl -X POST -F "file=@test.jpg" http://helmholtz.local:8000/compliment
+cd /workspace/doorbell_compliment_service
+pip install --extra-index-url https://pypi.org/simple -r app/requirements.txt
+python3 app/main.py
+```
+
+The server will start on `localhost:8080`.
+
+---
+
+## Testing the Doorbell Endpoint
+
+```bash
+curl http://localhost:8080/doorbell
+```
+
+Expected output (example):
+
+```json
+{
+  "description": "I see a visitor who looks absolutely wonderful today."
+}
 ```
 
 ---
 
-## 📄 License
+## Development Tips
 
-This project is licensed under the **Apache License 2.0**.  
-You are free to use, modify, and redistribute this code, provided you include attribution.
+* Edit the code directly in VS Code via [Remote – SSH](https://code.visualstudio.com/docs/remote/ssh)
+* Mount your repo to the container for hot edits
+* Cache Python packages to speed up repeated runs:
+
+```bash
+jetson-containers run \
+  -v ~/projects/doorbell_compliment_service:/workspace/doorbell_compliment_service \
+  -v ~/.cache/pip:/root/.cache/pip \
+  $(autotag l4t-pytorch)
+```
+
+* Switch `/doorbell` to `POST` later to handle actual camera snapshots
 
 ---
 
-## 🌱 Future Enhancements
+## Future Improvements
 
-- CLIP-based appearance analysis  
-- Small LLM for richer compliments  
-- TensorRT optimization  
-- Logging + compliment history dashboard  
-- Personality modes (warm, funny, poetic, dramatic)
+* Replace the placeholder image model with BLIP or CLIP captioning
+* Integrate USB or CSI camera for live snapshots
+* Add auto-reload (`uvicorn --reload`) for faster development
+* Turn the container into a bootable service for always-on monitoring
 
 ---
 
-## ✨ Author
+## License
 
-**Brad Reimer**  
-GitHub: [bradreimer](https://github.com/bradreimer)
+MIT License © Brad Reimer
+
+---
+
+## Acknowledgements
+
+* [Jetson Containers](https://github.com/dusty-nv/jetson-containers) – Simplifying NVIDIA Jetson container workflows
+* [FastAPI](https://fastapi.tiangolo.com/) – Web framework
+* [TorchVision / PyTorch](https://pytorch.org/) – GPU-accelerated ML
