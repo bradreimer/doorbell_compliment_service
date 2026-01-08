@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  doorbell-compliment:
+    container_name: doorbell-compliment
+    image: doorbell-compliment:latest
+    restart: always
+
+    # GPU support for Jetson
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=all
+
+    # Expose FastAPI port
+    ports:
+      - "8000:8000"
+
+    # Mount your project directory (optional for dev)
+    volumes:
+      - ./:/app
+
+    # Ensure container starts after Docker is ready
+    depends_on: []
+
