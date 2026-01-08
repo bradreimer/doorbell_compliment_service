@@ -58,12 +58,21 @@ jetson-containers run \
   $(autotag l4t-pytorch)
 ```
 
+Or to speed up the installation of dependencies:
+
+```bash
+jetson-containers run \
+  -v ~/projects/doorbell_compliment_service:/workspace/doorbell_compliment_service \
+  -v ~/.cache/pip:/root/.cache/pip \
+  $(autotag l4t-pytorch)
+```
+
 Inside the container:
 
 ```bash
 cd /workspace/doorbell_compliment_service
-pip install --extra-index-url https://pypi.org/simple -r app/requirements.txt
-python3 app/main.py
+pip install -r app/requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
 The server will start on `localhost:8080`.

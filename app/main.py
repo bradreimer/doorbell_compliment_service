@@ -1,36 +1,26 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, HTTPException
+from app.vision import extract_features
+from app.compliment import generate_compliment
+from PIL import Image
+import io
 
-app = FastAPI()
+app = FastAPI(title="Doorbell Compliment Service")
 
-@app.get("/doorbell")
-def doorbell():
-    compliment = 'TESTING: A visitor is at the door.'
-    return { "compliment": compliment }
+@app.post("/doorbell")
+async def doorbell_endpoint(file: UploadFile = File(...)):
+    # Validate file type
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
 
-# from fastapi import FastAPI, UploadFile, File, HTTPException
-# from app.vision import extract_features
-# from app.compliment import generate_compliment
-# from PIL import Image
-# import io
+    # Read image bytes
+    contents = await file.read()
+    image = Image.open(io.BytesIO(contents)).convert("RGB")
 
-# app = FastAPI(title="Doorbell Compliment Service")
+    # Extract features from the image
+    features = extract_features(image)
 
+    # Generate a compliment based on features
+    compliment = generate_compliment(features)
 
-# @app.post("/compliment")
-# async def compliment_endpoint(file: UploadFile = File(...)):
-#     # Validate file type
-#     if not file.content_type.startswith("image/"):
-#         raise HTTPException(status_code=400, detail="File must be an image")
-
-#     # Read image bytes
-#     contents = await file.read()
-#     image = Image.open(io.BytesIO(contents)).convert("RGB")
-
-#     # Extract features from the image
-#     features = extract_features(image)
-
-#     # Generate a compliment based on features
-#     compliment = generate_compliment(features)
-
-#     return {"compliment": compliment}
+    return {"compliment": compliment}
 
