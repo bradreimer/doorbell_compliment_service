@@ -1,48 +1,90 @@
-import torch
-import random
-from typing import List
+"""
+Compliment generation based on visual features.
+"""
 
-def generate_compliment(features: torch.Tensor) -> str:
+from __future__ import annotations
+
+from typing import Dict, Union
+import random
+
+FeatureMap = Dict[str, Union[float, bool]]
+
+ENERGY_HIGH_THRESHOLD: float = 120.0
+ENERGY_MEDIUM_THRESHOLD: float = 100.0
+BRIGHTNESS_THRESHOLD: float = 140.0
+COLORFULNESS_THRESHOLD: float = 70.0
+
+
+def generate_compliment(features: FeatureMap) -> str:
     """
-    Generate a polite compliment based on extracted image features.
+    Generate a positive, appearance-focused compliment.
 
     Args:
-        features (torch.Tensor): Feature vector from image, expected shape [C] or [N, C].
+        features: Visual cues extracted from an image.
 
     Returns:
-        str: A generated compliment string.
+        A friendly compliment string.
     """
-    # Compute feature "energy" for simple heuristic
-    energy: float = float(features.norm().item())
+    phrases: list[str] = []
 
-    # Base compliment options
-    base: List[str]
-    if energy > 120:
-        base = [
-            "You look absolutely radiant today",
-            "Your presence lights up the doorway",
-            "You have an incredible energy about you"
-        ]
-    elif energy > 100:
-        base = [
-            "You're looking fantastic today",
-            "You've got a great vibe going on",
-            "You bring a warm presence with you"
-        ]
-    else:
-        base = [
-            "Hope you're having a wonderful day",
-            "It's great to see you",
-            "You have a kind and welcoming presence"
-        ]
+    if bool(features.get("has_face")):
+        phrases.append(
+            random.choice(
+                (
+                    "Your expression feels warm and welcoming",
+                    "You have a very friendly presence",
+                    "That look carries quiet confidence",
+                )
+            )
+        )
 
-    # Playful endings
-    endings: List[str] = [
-        "— thanks for stopping by!",
-        "— glad you're here!",
-        "— wishing you a great rest of your day!",
-        "— you made our doorbell's day!"
-    ]
+    if float(features.get("brightness", 0.0)) > BRIGHTNESS_THRESHOLD:
+        phrases.append(
+            random.choice(
+                (
+                    "The lighting really suits you",
+                    "You stand out beautifully in this light",
+                )
+            )
+        )
 
-    compliment: str = f"{random.choice(base)} {random.choice(endings)}"
-    return compliment
+    if float(features.get("colorfulness", 0.0)) > COLORFULNESS_THRESHOLD:
+        phrases.append(
+            random.choice(
+                (
+                    "Your outfit has great color and personality",
+                    "Those colors work wonderfully together",
+                )
+            )
+        )
+
+    if bool(features.get("centered")):
+        phrases.append(
+            random.choice(
+                (
+                    "You carry yourself with calm confidence",
+                    "You look comfortable and at ease",
+                )
+            )
+        )
+
+    if not phrases:
+        phrases.append(
+            random.choice(
+                (
+                    "You have a kind and welcoming presence",
+                    "You bring a really nice energy with you",
+                )
+            )
+        )
+
+    ending = random.choice(
+        (
+            "Thanks for stopping by!",
+            "Hope the rest of your day is great!",
+            "Great to see you today!",
+            "You just made the doorbell smile!",
+        )
+    )
+
+    return f"{random.choice(phrases)} {ending}"
