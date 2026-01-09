@@ -1,27 +1,23 @@
+from typing import Optional
+from PIL import Image
 import torch
-import torchvision.transforms as T
 from torchvision.models import efficientnet_b0, EfficientNet_B0_Weights
 
-# Load model once at startup
-_weights = EfficientNet_B0_Weights.DEFAULT
-_model = efficientnet_b0(weights=_weights)
+# Device
+_device: torch.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Load model once
+_weights: EfficientNet_B0_Weights = EfficientNet_B0_Weights.DEFAULT
+_model: torch.nn.Module = efficientnet_b0(weights=_weights)
 _model.eval()
+_model.to(_device)
 
-# Preprocessing pipeline
-_transform = T.Compose([
-    T.Resize((224, 224)),
-    T.ToTensor(),
-    T.Normalize(mean=_weights.meta["mean"], std=_weights.meta["std"])
-])
-
+# Use official transform
+_transform: torch.nn.Module = _weights.transforms()
 
 @torch.inference_mode()
-def extract_features(image):
-    """
-    Takes a PIL image and returns a feature vector (tensor).
-    """
-    tensor = _transform(image).unsqueeze(0)
-    features = _model.features(tensor)
-    pooled = torch.nn.functional.adaptive_avg_pool2d(features, (1, 1))
+def extract_features(image: Image.Image) -> torch.Tensor:
+    tensor: torch.Tensor = _transform(image).unsqueeze(0).to(_device)
+    features: torch.Tensor = _model.features(tensor)
+    pooled: torch.Tensor = torch.nn.functional.adaptive_avg_pool2d(features, (1, 1))
     return pooled.squeeze().cpu()
-
