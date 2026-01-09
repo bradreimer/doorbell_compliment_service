@@ -88,7 +88,6 @@ docker run -d \
   --network host \
   -v $(pwd):/app \
   doorbell-compliment
-
 ```
 
 ## Testing the Doorbell Endpoint

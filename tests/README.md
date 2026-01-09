@@ -10,11 +10,11 @@ Replace `sample.jpg` with any image.
 
 ## Automated Test
 
-Install pytest:
+## Testing the Python code
 
-    pip install pytest
-
-Run tests:
-
-    pytest -q
-
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt -r requirements-dev.txt
+pytest && pylint app tests
+```

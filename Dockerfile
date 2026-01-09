@@ -6,7 +6,7 @@ WORKDIR /workspace/doorbell_compliment_service
 
 # Copy only your application code
 COPY app/ ./app/
-COPY app/requirements.txt .
+COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --upgrade pip && \
