@@ -1,28 +1,19 @@
-# Base image: NVIDIA L4T PyTorch (Jetson‑optimized)
-FROM nvcr.io/nvidia/l4t-pytorch:r36.2.0-pth2.4-py3
+# Base image from Jetson PyTorch wheels
+FROM dustynv/l4t-pytorch:r36.4.0
 
 # Set working directory
-WORKDIR /app
+WORKDIR /workspace/doorbell_compliment_service
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
-
-    # Copy requirements first (better layer caching)
-COPY requirements.txt .
+# Copy only your application code
+COPY app/ ./app/
+COPY app/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Expose port
+EXPOSE 8080
 
-# Expose FastAPI port
-EXPOSE 8000
-
-# Default command: run FastAPI with Uvicorn
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
+# Run the FastAPI app with Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]

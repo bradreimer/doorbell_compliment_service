@@ -23,13 +23,8 @@ This project runs on **NVIDIA Jetson Orin Nano** using [jetson-containers](https
 doorbell_compliment_service/
 ├── app/
 │   ├── main.py            # FastAPI server entry point
-│   ├── model.py           # Image analysis model
-│   ├── image_utils.py     # Optional image helpers
 │   └── requirements.txt   # Python dependencies
-├── jetson/
-│   └── dockerfile.doorbell # Jetson container Dockerfile (optional)
-├── scripts/
-│   └── dev.sh             # Convenience launcher
+├── Dockerfile             # Optional Dockerfile
 ├── README.md
 └── .gitignore
 ```
@@ -78,6 +73,23 @@ uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 The server will start on `localhost:8080`.
 
 ---
+
+### Using a custom Docker image
+
+```bash
+docker build -t doorbell-compliment .
+```
+
+```bash
+docker run -d \
+  --name doorbell-compliment \
+  --restart unless-stopped \
+  --runtime nvidia \
+  --network host \
+  -v $(pwd):/app \
+  doorbell-compliment
+
+```
 
 ## Testing the Doorbell Endpoint
 
