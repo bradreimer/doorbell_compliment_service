@@ -4,32 +4,12 @@ A Jetson-powered web service that analyzes doorbell images, analyzes the visitor
 
 This project runs on **NVIDIA Jetson Orin Nano** using [jetson-containers](https://github.com/dusty-nv/jetson-containers) and `l4t-pytorch`, providing a lightweight FastAPI endpoint to handle incoming images and generate compliments (or descriptions) of visitors.
 
----
-
 ## Features
 
-* FastAPI web server at `/doorbell` (default `GET` endpoint for testing)
+* FastAPI web server at `/doorbell`
 * GPU-accelerated image analysis with PyTorch / TorchVision
 * Compatible with JetPack 6 / L4T 36.x
-* Fully editable via VS Code Remote SSH
 * Easy containerized workflow with jetson-containers
-* Clean GitHub repository layout
-
----
-
-## Repository Layout
-
-```
-doorbell_compliment_service/
-├── app/
-│   ├── main.py            # FastAPI server entry point
-│   └── requirements.txt   # Python dependencies
-├── Dockerfile             # Optional Dockerfile
-├── README.md
-└── .gitignore
-```
-
----
 
 ## Prerequisites
 
@@ -53,32 +33,23 @@ jetson-containers run \
   $(autotag l4t-pytorch)
 ```
 
-Or to speed up the installation of dependencies:
-
-```bash
-jetson-containers run \
-  -v ~/projects/doorbell_compliment_service:/workspace/doorbell_compliment_service \
-  -v ~/.cache/pip:/root/.cache/pip \
-  $(autotag l4t-pytorch)
-```
-
-Inside the container:
+Once in the container's interactive prompt, run the server.
 
 ```bash
 cd /workspace/doorbell_compliment_service
-pip install -r app/requirements.txt
+pip install -r requirements.txt
 uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-The server will start on `localhost:8080`.
+## Using a custom Docker image (production)
 
----
-
-### Using a custom Docker image
+Build with BuildKit enabled to speed up image builds.
 
 ```bash
-docker build -t doorbell-compliment .
+DOCKER_BUILDKIT=1 docker build --progress=plain -t doorbell-compliment .
 ```
+
+Run with custom mappings for homeassitant using the LAN address.
 
 ```bash
 docker run -d \
@@ -86,9 +57,12 @@ docker run -d \
   --restart unless-stopped \
   --runtime nvidia \
   --network host \
+  --add-host homeassistant.local:192.168.1.93 \
   -v $(pwd):/app \
   doorbell-compliment
 ```
+
+The server will start on `localhost:8080`.
 
 ## Testing the Doorbell Endpoint
 
@@ -113,11 +87,17 @@ Expected output (example):
 * Cache Python packages to speed up repeated runs:
 
 ```bash
+# ensure host pip cache exists
+mkdir -p ~/.cache/pip
+
 jetson-containers run \
   -v ~/projects/doorbell_compliment_service:/workspace/doorbell_compliment_service \
-  -v ~/.cache/pip:/root/.cache/pip \
+  -v ~/.cache/pip:/root/.cache/pip:rw \
+  -e PIP_CACHE_DIR=/root/.cache/pip \
   $(autotag l4t-pytorch)
 ```
+
+This mounts your host pip cache into the container so pip downloads are reused between container runs. If the container runs as a non-root user, mount to that user's cache path or set `PIP_CACHE_DIR` accordingly. For build-time caching see the BuildKit example above.
 
 * Switch `/doorbell` to `POST` later to handle actual camera snapshots
 

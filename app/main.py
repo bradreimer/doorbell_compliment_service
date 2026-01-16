@@ -5,8 +5,10 @@ FastAPI application entry point.
 from __future__ import annotations
 
 import io
+import urllib.request
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 from PIL import Image
 
 from app.compliment import generate_compliment
@@ -15,21 +17,30 @@ from app.vision import extract_features
 app = FastAPI(title="Doorbell Compliment Service")
 
 
+class DoorbellRequest(BaseModel):
+    """Request body for doorbell endpoint."""
+
+    image_url: str
+
+
 @app.post("/doorbell")
-async def doorbell_endpoint(file: UploadFile = File(...)) -> dict[str, str]:
+async def doorbell_endpoint(request: DoorbellRequest) -> dict[str, str]:
     """
-    Accept an image and return a generated compliment.
+    Accept an image URL and return a generated compliment.
 
     Args:
-        file: Uploaded image file.
+        request: Request containing the image URL.
 
     Returns:
         JSON containing a compliment.
     """
-    if file.content_type is None or not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
-
-    contents = await file.read()
+    try:
+        with urllib.request.urlopen(request.image_url, timeout=10) as response:
+            contents = response.read()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=400, detail=f"Failed to download image: {str(exc)}"
+        ) from exc
 
     try:
         image = Image.open(io.BytesIO(contents)).convert("RGB")

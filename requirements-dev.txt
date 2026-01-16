@@ -3,3 +3,5 @@ pylint
 mypy
 types-Pillow
 httpx
+fastapi
+pydantic

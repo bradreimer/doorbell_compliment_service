@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.4
+
 # Base image from Jetson PyTorch wheels
 FROM dustynv/l4t-pytorch:r36.4.0
 
@@ -8,9 +10,10 @@ WORKDIR /workspace/doorbell_compliment_service
 COPY app/ ./app/
 COPY requirements.txt .
 
-# Install Python dependencies
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with pip cache
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
+    pip install -r requirements.txt
 
 # Expose port
 EXPOSE 8080
